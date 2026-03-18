@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Clock</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    height: 100vh;
+    background: #0c1a10;
+    font-family: 'Jost', sans-serif;
+    font-weight: 200;
+    color: #d4e8d0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .leaf-bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.22;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 15%, rgba(28,70,38,0.55) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 85%, rgba(12,45,25,0.65) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 50%, rgba(8,20,12,0.25) 0%, transparent 80%);
+    z-index: 1;
+  }
+
+  .main {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 960px;
+    padding: 30px 24px 16px;
+  }
+
+  .date-line {
+    font-family: 'Jost', sans-serif;
+    font-weight: 200;
+    font-size: clamp(11px, 1.8vw, 15px);
+    letter-spacing: 0.4em;
+    color: #7aaa8a;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: 0;
+    animation: fadeUp 1.2s 0.3s forwards;
+  }
+
+  .clock {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(88px, 17vw, 172px);
+    line-height: 1;
+    color: #eaf5e4;
+    letter-spacing: -0.02em;
+    opacity: 0;
+    animation: fadeUp 1.2s 0.5s forwards;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .ampm {
+    font-size: 0.21em;
+    letter-spacing: 0.15em;
+    color: #7aaa8a;
+    font-family: 'Jost', sans-serif;
+    font-weight: 200;
+    margin-top: 0.18em;
+    margin-left: 8px;
+  }
+
+  .weather-main {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 20px;
+    opacity: 0;
+    animation: fadeUp 1.2s 0.9s forwards;
+  }
+
+  .weather-icon-big {
+    font-size: 52px;
+    line-height: 1;
+  }
+
+  .weather-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .temp-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(40px, 6.5vw, 68px);
+    color: #eaf5e4;
+    line-height: 1;
+  }
+
+  .weather-desc {
+    font-size: clamp(11px, 1.6vw, 14px);
+    letter-spacing: 0.28em;
+    color: #7aaa8a;
+    text-transform: uppercase;
+  }
+
+  .weather-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #7aaa8a;
+    letter-spacing: 0.1em;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .meta-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: #4a6e54;
+    text-transform: uppercase;
+  }
+
+  .meta-val {
+    font-size: 13px;
+    color: #aed4b8;
+  }
+
+  .divider {
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #3a5e44, transparent);
+    margin: 20px auto 0;
+    opacity: 0;
+    animation: fadeUp 1.2s 1.1s forwards;
+  }
+
+  .forecast {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 1.2s 1.3s forwards;
+  }
+
+  .forecast-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: rgba(20, 50, 28, 0.4);
+    border: 1px solid rgba(80, 140, 95, 0.18);
+    border-radius: 12px;
+    padding: 10px 12px;
+    min-width: 70px;
+  }
+
+  .f-day {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: #5a8a6a;
+    text-transform: uppercase;
+  }
+
+  .f-icon { font-size: 22px; line-height: 1; }
+
+  .f-hi {
+    font-size: 14px;
+    color: #d4e8d0;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+  }
+
+  .f-lo {
+    font-size: 11px;
+    color: #5a8a6a;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  .f-rain {
+    font-size: 10px;
+    color: #7ab8c8;
+    letter-spacing: 0.05em;
+  }
+
+  .status {
+    position: fixed;
+    bottom: 14px;
+    right: 18px;
+    font-size: 9px;
+    color: #2e4e36;
+    letter-spacing: 0.12em;
+    z-index: 10;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes sway {
+    0%,100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(1.5deg) scale(1.008); }
+  }
+
+  .lg1 { transform-origin: 10% 80%; animation: sway 14s ease-in-out infinite; }
+  .lg2 { transform-origin: 90% 80%; animation: sway 17s ease-in-out infinite; animation-delay: -5s; }
+  .lg3 { transform-origin: 50% 10%; animation: sway 20s ease-in-out infinite; animation-delay: -10s; }
+</style>
+</head>
+<body>
+
+<svg class="leaf-bg" viewBox="0 0 1200 820" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <!-- Left vine cluster -->
+  <g class="lg1" fill="#2d6e40">
+    <path d="M5 820 Q30 700 20 580 Q10 460 40 340 Q60 220 30 100" stroke="#2d6e40" stroke-width="3" fill="none"/>
+    <ellipse cx="55" cy="310" rx="62" ry="22" transform="rotate(-38 55 310)"/>
+    <ellipse cx="45" cy="265" rx="48" ry="17" transform="rotate(-58 45 265)"/>
+    <ellipse cx="85" cy="345" rx="68" ry="23" transform="rotate(-12 85 345)"/>
+    <ellipse cx="28" cy="240" rx="40" ry="14" transform="rotate(12 28 240)"/>
+    <ellipse cx="130" cy="295" rx="72" ry="21" transform="rotate(3 130 295)"/>
+    <ellipse cx="18" cy="190" rx="50" ry="17" transform="rotate(-28 18 190)"/>
+    <ellipse cx="75" cy="460" rx="55" ry="19" transform="rotate(18 75 460)"/>
+    <ellipse cx="48" cy="520" rx="45" ry="16" transform="rotate(-18 48 520)"/>
+    <ellipse cx="105" cy="555" rx="62" ry="21" transform="rotate(28 105 555)"/>
+    <ellipse cx="35" cy="610" rx="42" ry="15" transform="rotate(-42 35 610)"/>
+    <ellipse cx="155" cy="585" rx="70" ry="23" transform="rotate(8 155 585)"/>
+    <ellipse cx="70" cy="660" rx="54" ry="19" transform="rotate(-22 70 660)"/>
+    <ellipse cx="25" cy="715" rx="44" ry="15" transform="rotate(4 25 715)"/>
+    <ellipse cx="115" cy="730" rx="60" ry="20" transform="rotate(22 115 730)"/>
+    <ellipse cx="60" cy="780" rx="50" ry="17" transform="rotate(-10 60 780)"/>
+  </g>
+
+  <!-- Right vine cluster -->
+  <g class="lg2" fill="#1e5530">
+    <path d="M1195 820 Q1170 700 1180 580 Q1190 460 1160 340 Q1140 220 1170 100" stroke="#1e5530" stroke-width="3" fill="none"/>
+    <ellipse cx="1145" cy="285" rx="62" ry="22" transform="rotate(42 1145 285)"/>
+    <ellipse cx="1155" cy="240" rx="48" ry="17" transform="rotate(62 1155 240)"/>
+    <ellipse cx="1115" cy="320" rx="68" ry="23" transform="rotate(14 1115 320)"/>
+    <ellipse cx="1172" cy="215" rx="40" ry="14" transform="rotate(-14 1172 215)"/>
+    <ellipse cx="1075" cy="275" rx="72" ry="21" transform="rotate(-5 1075 275)"/>
+    <ellipse cx="1182" cy="168" rx="50" ry="17" transform="rotate(30 1182 168)"/>
+    <ellipse cx="1125" cy="435" rx="55" ry="19" transform="rotate(-22 1125 435)"/>
+    <ellipse cx="1152" cy="500" rx="45" ry="16" transform="rotate(20 1152 500)"/>
+    <ellipse cx="1095" cy="538" rx="62" ry="21" transform="rotate(-32 1095 538)"/>
+    <ellipse cx="1165" cy="598" rx="42" ry="15" transform="rotate(44 1165 598)"/>
+    <ellipse cx="1048" cy="572" rx="70" ry="23" transform="rotate(-10 1048 572)"/>
+    <ellipse cx="1130" cy="648" rx="54" ry="19" transform="rotate(24 1130 648)"/>
+    <ellipse cx="1175" cy="705" rx="44" ry="15" transform="rotate(-6 1175 705)"/>
+    <ellipse cx="1088" cy="718" rx="60" ry="20" transform="rotate(-24 1088 718)"/>
+    <ellipse cx="1140" cy="775" rx="50" ry="17" transform="rotate(12 1140 775)"/>
+  </g>
+
+  <!-- Top + bottom scattered leaves -->
+  <g class="lg3" fill="#163d20">
+    <ellipse cx="280" cy="35" rx="75" ry="23" transform="rotate(-12 280 35)"/>
+    <ellipse cx="420" cy="18" rx="58" ry="19" transform="rotate(16 420 18)"/>
+    <ellipse cx="240" cy="68" rx="50" ry="17" transform="rotate(-32 240 68)"/>
+    <ellipse cx="520" cy="42" rx="68" ry="21" transform="rotate(6 520 42)"/>
+    <ellipse cx="680" cy="28" rx="60" ry="19" transform="rotate(-18 680 28)"/>
+    <ellipse cx="800" cy="55" rx="52" ry="17" transform="rotate(26 800 55)"/>
+    <ellipse cx="940" cy="32" rx="65" ry="20" transform="rotate(-8 940 32)"/>
+    <ellipse cx="620" cy="22" rx="46" ry="15" transform="rotate(22 620 22)"/>
+    <ellipse cx="360" cy="58" rx="40" ry="14" transform="rotate(-5 360 58)"/>
+    <!-- bottom -->
+    <ellipse cx="220" cy="800" rx="72" ry="23" transform="rotate(10 220 800)"/>
+    <ellipse cx="380" cy="815" rx="56" ry="18" transform="rotate(-10 380 815)"/>
+    <ellipse cx="560" cy="808" rx="48" ry="16" transform="rotate(6 560 808)"/>
+    <ellipse cx="850" cy="810" rx="66" ry="21" transform="rotate(14 850 810)"/>
+    <ellipse cx="1000" cy="798" rx="52" ry="17" transform="rotate(-22 1000 798)"/>
+    <ellipse cx="720" cy="818" rx="44" ry="15" transform="rotate(-4 720 818)"/>
+  </g>
+
+  <!-- Thin decorative stems -->
+  <g stroke="#2a5e38" stroke-width="1.5" fill="none" opacity="0.5">
+    <path d="M5 820 Q25 650 15 480 Q5 310 35 140"/>
+    <path d="M1195 820 Q1175 650 1185 480 Q1195 310 1165 140"/>
+    <path d="M35 820 Q15 700 28 580"/>
+    <path d="M1165 820 Q1185 700 1172 580"/>
+  </g>
+</svg>
+
+<div class="overlay"></div>
+
+<div class="main">
+  <div class="date-line" id="dateLine">—</div>
+
+  <div class="clock" id="clockEl">
+    <span id="timeStr">—</span><span class="ampm" id="ampm"></span>
+  </div>
+
+  <div class="weather-main" id="weatherMain" style="opacity:0;animation:none">
+    <div class="weather-icon-big" id="iconBig">🌿</div>
+    <div class="weather-details">
+      <div class="temp-big" id="tempBig">—</div>
+      <div class="weather-desc" id="weatherDesc">loading weather…</div>
+      <div class="weather-meta" id="weatherMeta"></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="forecast" id="forecast"></div>
+</div>
+
+<div class="status" id="status">open-meteo · 78705</div>
+
+<script>
+const LAT = 30.2938;
+const LON = -97.7405;
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function wIcon(code, isDay) {
+  if (code === 0)        return isDay ? '☀️' : '🌙';
+  if (code <= 2)         return isDay ? '🌤️' : '🌙';
+  if (code === 3)        return '☁️';
+  if (code <= 49)        return '🌫️';
+  if (code <= 57)        return '🌦️';
+  if (code <= 67)        return '🌧️';
+  if (code <= 77)        return '❄️';
+  if (code <= 82)        return '🌦️';
+  if (code <= 86)        return '🌨️';
+  if (code >= 95)        return '⛈️';
+  return '🌤️';
+}
+
+function wLabel(code) {
+  if (code === 0)  return 'Clear sky';
+  if (code <= 2)   return 'Partly cloudy';
+  if (code === 3)  return 'Overcast';
+  if (code <= 49)  return 'Foggy';
+  if (code <= 57)  return 'Drizzle';
+  if (code <= 67)  return 'Rain';
+  if (code <= 77)  return 'Snow';
+  if (code <= 82)  return 'Rain showers';
+  if (code <= 86)  return 'Snow showers';
+  if (code >= 95)  return 'Thunderstorm';
+  return 'Cloudy';
+}
+
+function toF(c) { return Math.round(c * 9/5 + 32); }
+
+function updateClock() {
+  const now = new Date();
+  let h = now.getHours();
+  const m = now.getMinutes();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('timeStr').textContent = `${h}:${String(m).padStart(2,'0')}`;
+  document.getElementById('ampm').textContent = ap;
+
+  const d = now.getDay(), mo = now.getMonth(), dt = now.getDate();
+  document.getElementById('dateLine').textContent = `${DAYS_SHORT[d]}, ${MONTHS[mo]} ${dt}`;
+}
+
+async function fetchWeather() {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${LAT}&longitude=${LON}` +
+      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,wind_speed_10m,weather_code,is_day` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+      `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FChicago&forecast_days=7`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const c = data.current;
+    const d = data.daily;
+
+    // Current conditions
+    document.getElementById('iconBig').textContent = wIcon(c.weather_code, c.is_day);
+    document.getElementById('tempBig').textContent = `${Math.round(c.temperature_2m)}°F`;
+    document.getElementById('weatherDesc').textContent = wLabel(c.weather_code);
+
+    document.getElementById('weatherMeta').innerHTML = `
+      <div class="meta-item"><div class="meta-label">Feels like</div><div class="meta-val">${Math.round(c.apparent_temperature)}°F</div></div>
+      <div class="meta-item"><div class="meta-label">Humidity</div><div class="meta-val">${c.relative_humidity_2m}%</div></div>
+      <div class="meta-item"><div class="meta-label">Rain chance</div><div class="meta-val">${c.precipitation_probability}%</div></div>
+      <div class="meta-item"><div class="meta-label">Wind</div><div class="meta-val">${Math.round(c.wind_speed_10m)} mph</div></div>
+    `;
+
+    // Show weather block with fade
+    const wm = document.getElementById('weatherMain');
+    wm.style.transition = 'opacity 1s';
+    wm.style.opacity = '1';
+
+    // 7-day forecast
+    const fc = document.getElementById('forecast');
+    fc.innerHTML = '';
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(today);
+      dayDate.setDate(today.getDate() + i);
+      const dayName = i === 0 ? 'Today' : DAYS_SHORT[dayDate.getDay()];
+
+      const div = document.createElement('div');
+      div.className = 'forecast-day';
+      div.innerHTML = `
+        <div class="f-day">${dayName}</div>
+        <div class="f-icon">${wIcon(d.weather_code[i], 1)}</div>
+        <div class="f-hi">${Math.round(d.temperature_2m_max[i])}°</div>
+        <div class="f-lo">${Math.round(d.temperature_2m_min[i])}°</div>
+        <div class="f-rain">💧 ${d.precipitation_probability_max[i]}%</div>
+      `;
+      fc.appendChild(div);
+    }
+
+    document.getElementById('status').textContent = 'open-meteo · 78705 · updated ' + new Date().toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+  } catch (e) {
+    document.getElementById('status').textContent = 'weather unavailable';
+  }
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+fetchWeather();
+setInterval(fetchWeather, 10 * 60 * 1000); // refresh every 10 min
+</script>
+</body>
+</html>
